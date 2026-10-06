@@ -1,0 +1,30 @@
+# Perfil H2 EN MEMORIA, para levantar la aplicación y ejecutar la suite de pruebas
+# sin depender de Docker ni de una instancia de PostgreSQL.
+#
+# Uso:  .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=h2
+#
+# Usa un script de esquema propio (schema-h2.sql) porque PostgreSQL no acepta
+# 'ON CONFLICT DO NOTHING' y H2 no admite la sintaxis 'BIGSERIAL'; el DDL es el
+# mismo, adaptado al motor.
+spring:
+  datasource:
+    url: jdbc:h2:mem:medicitas;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-h2.sql
+      encoding: UTF-8
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+medicitas:
+  jwt:
+    # Secreto efímero de pruebas. Deliberadamente NO es un secreto real: este perfil
+    # solo sirve para entorno local y pruebas automatizadas.
+    secret: medicitas-h2-desarrollo-pruebas-clave-efimera-no-usar-en-produccion

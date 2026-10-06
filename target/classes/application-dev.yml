@@ -1,0 +1,21 @@
+# Perfil de DESARROLLO LOCAL.
+#
+# Contiene las credenciales de la instancia de PostgreSQL que levanta el
+# 'docker-compose up -d' del repositorio. Son credenciales de una base de datos
+# local, sin valor fuera del equipo de desarrollo, y por eso viven aquí y no en
+# application.yml (que es el archivo que se lee en cualquier entorno).
+#
+# Uso:  .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/medicitasdb
+    username: medicitas_user
+    password: medicitas_pass
+
+logging:
+  level:
+    co.edu.monteria.medicitas: DEBUG
