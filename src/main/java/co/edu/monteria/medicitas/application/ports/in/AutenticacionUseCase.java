@@ -14,6 +14,12 @@ public interface AutenticacionUseCase {
     Usuario autenticar(String email, String password);
 
     /**
+     * Igual que {@link #autenticar}, pero identifica al usuario por su número de documento,
+     * que es como inician sesión los afiliados en la app móvil.
+     */
+    Usuario autenticarPorDocumento(String numDocumento, String password);
+
+    /**
      * Genera el token JWT de la sesión a partir de un usuario ya verificado.
      */
     String generarToken(Usuario usuario);

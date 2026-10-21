@@ -85,6 +85,19 @@ public class AuthService implements AutenticacionUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Usuario autenticarPorDocumento(String numDocumento, String password) {
+        Usuario usuario = usuarioRepository.buscarPorNumDocumento(numDocumento)
+                .orElseThrow(() -> new CredencialesInvalidasException("Documento o contraseña incorrectos."));
+
+        if (!passwordEncoder.matches(password, usuario.getPasswordHash())) {
+            throw new CredencialesInvalidasException("Documento o contraseña incorrectos.");
+        }
+
+        return usuario;
+    }
+
+    @Override
     public String generarToken(Usuario usuario) {
         return jwtPort.generarToken(usuario);
     }

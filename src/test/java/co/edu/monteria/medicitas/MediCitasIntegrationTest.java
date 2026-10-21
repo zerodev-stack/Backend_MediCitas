@@ -108,6 +108,33 @@ class MediCitasIntegrationTest {
     }
 
     @Test
+    @DisplayName("la app móvil puede iniciar sesión con el número de documento")
+    void loginPorNumeroDeDocumento() throws Exception {
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"numDocumento":"1067890123","password":"%s"}
+                                """.formatted(CLAVE_PACIENTE)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.usuario.email").value(CORREO_PACIENTE));
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"numDocumento":"1067890123","password":"clave-mala"}
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"password":"%s"}
+                                """.formatted(CLAVE_PACIENTE)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("una contraseña incorrecta responde 401 con un mensaje genérico")
     void credencialesIncorrectasNoRevelanCuentas() throws Exception {
         MvcResult porEmail = mockMvc.perform(post("/auth/login")
@@ -317,6 +344,14 @@ class MediCitasIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.afiliadoActivo").value(true))
                 .andExpect(jsonPath("$.epsSoportadaEnRegion").value(true));
+
+        // Una cédula que no está en eps_affiliates no tiene afiliación activa.
+        mockMvc.perform(get("/auth/validar-bdua")
+                        .param("tipoDocumento", "CC")
+                        .param("numDocumento", "1000000001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.afiliadoActivo").value(false))
+                .andExpect(jsonPath("$.mensajeOrientacion").isNotEmpty());
     }
 
     // ------------------------------------------------------------------

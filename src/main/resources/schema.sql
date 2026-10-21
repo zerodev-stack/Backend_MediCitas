@@ -163,6 +163,21 @@ CREATE TABLE IF NOT EXISTS notificaciones (
     fecha_envio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ---------------------------------------------------------------------------
+-- 13. AFILIADOS EPS
+-- ---------------------------------------------------------------------------
+-- Personas afiliadas a una EPS, identificadas por su número de cédula. Es la fuente
+-- que consulta la verificación de afiliación (BduaAdapter).
+CREATE TABLE IF NOT EXISTS eps_affiliates (
+    id BIGSERIAL PRIMARY KEY,
+    document_number VARCHAR(20) NOT NULL UNIQUE,
+    first_name VARCHAR(60) NOT NULL,
+    middle_name VARCHAR(60),
+    first_last_name VARCHAR(60) NOT NULL,
+    second_last_name VARCHAR(60),
+    eps_id BIGINT NOT NULL REFERENCES eps(id)
+);
+
 -- ============================================================================
 -- DATOS INICIALES
 -- ============================================================================
@@ -245,6 +260,17 @@ INSERT INTO autorizaciones_acceso (id, historia_id, ips_solicitante_id, estado) 
 (1, 1, 2, 'HABILITADO')
 ON CONFLICT (id) DO NOTHING;
 
+-- Afiliados de prueba. Quien no aparece aquí no tiene afiliación activa; el afiliado de
+-- EPS Sanitas (id 3, sin convenio en la región) sirve para demostrar el rechazo.
+INSERT INTO eps_affiliates (id, document_number, first_name, middle_name, first_last_name, second_last_name, eps_id) VALUES
+(1, '1067890123', 'Carlos', 'Alberto', 'Mendoza', NULL, 1),
+(2, '1067111222', 'Andrés', 'Felipe', 'Torres', NULL, 1),
+(3, '1067333444', 'Luz', 'Marcela', 'Marín', NULL, 2),
+(4, '1067890124', 'Ana', 'Lucía', 'Pérez', 'Díaz', 1),
+(5, '1067444555', 'Sofía', 'Valentina', 'Herrera', 'Castro', 2),
+(6, '1067890128', 'Pedro', 'José', 'Ramírez', 'Soto', 3)
+ON CONFLICT (id) DO NOTHING;
+
 -- ---------------------------------------------------------------------------
 -- REALINEACIÓN DE LAS SECUENCIAS
 -- ---------------------------------------------------------------------------
@@ -267,3 +293,4 @@ SELECT setval(pg_get_serial_sequence('colas_espera', 'id'), GREATEST((SELECT MAX
 SELECT setval(pg_get_serial_sequence('historias_clinicas', 'id'), GREATEST((SELECT MAX(id) FROM historias_clinicas), 1));
 SELECT setval(pg_get_serial_sequence('autorizaciones_acceso', 'id'), GREATEST((SELECT MAX(id) FROM autorizaciones_acceso), 1));
 SELECT setval(pg_get_serial_sequence('notificaciones', 'id'), GREATEST((SELECT MAX(id) FROM notificaciones), 1));
+SELECT setval(pg_get_serial_sequence('eps_affiliates', 'id'), GREATEST((SELECT MAX(id) FROM eps_affiliates), 1));

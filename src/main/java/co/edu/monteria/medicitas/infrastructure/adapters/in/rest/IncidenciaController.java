@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * 5. Inyectar el servicio aquí y exponer los endpoints (POST /incidencias/categorias, GET, PUT, DELETE).
  */
 @RestController
-@RequestMapping("/api/v1/incidencias/categorias")
+@RequestMapping("/incidencias/categorias")
 public class IncidenciaController {
 
     // TODO: @Autowired private IncidenciaUseCase incidenciaUseCase;

@@ -32,7 +32,10 @@ public class AuthController {
     @Operation(summary = "Inicio de sesión",
             description = "Verifica las credenciales y retorna el usuario junto con su token Bearer JWT")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        Usuario usuario = autenticacionUseCase.autenticar(request.getEmail(), request.getPassword());
+        // La app móvil envía numDocumento; la web y las pruebas siguen usando email.
+        Usuario usuario = request.getNumDocumento() != null && !request.getNumDocumento().isBlank()
+                ? autenticacionUseCase.autenticarPorDocumento(request.getNumDocumento().trim(), request.getPassword())
+                : autenticacionUseCase.autenticar(request.getEmail(), request.getPassword());
         String token = autenticacionUseCase.generarToken(usuario);
         return ResponseEntity.ok(AuthResponse.de(usuario, token));
     }

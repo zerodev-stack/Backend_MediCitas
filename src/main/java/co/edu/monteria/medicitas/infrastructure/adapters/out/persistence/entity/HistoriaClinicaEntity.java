@@ -28,12 +28,10 @@ public class HistoriaClinicaEntity {
     @Column(nullable = false, length = 255)
     private String diagnostico;
 
-    @Lob
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String tratamiento;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String contenido;
 
     @Column(name = "fecha_registro", nullable = false, updatable = false)

@@ -16,11 +16,15 @@ spring:
   application:
     name: medicitas-backend
 
+  # Carga las credenciales locales de backend/.env (ignorado por git), si existe.
+  config:
+    import: optional:file:.env[.properties]
+
   # ---------------------------------------------------------------------------
   # BASE DE DATOS
   # ---------------------------------------------------------------------------
   # Apunta a la instancia de PostgreSQL que levanta 'docker-compose up -d'.
-  # Para otro servidor, se sobrescribe con las variables de entorno:
+  # Para otro servidor, se sobrescribe con las variables de entorno (o en backend/.env):
   #   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
   # NO se committed ninguna credencial real: el usuario y la contraseña local del
   # entorno de desarrollo se declaran en application-dev.yml.
@@ -74,15 +78,11 @@ medicitas:
     # ningún token firmado con la clave de otra persona es válido aquí.
     secret: ${MEDICITAS_JWT_SECRET:}
     expiration-ms: ${MEDICITAS_JWT_EXPIRATION_MS:86400000}
-  bdua:
-    # Códigos BDUA de las EPS con convenio activo en la red de Montería.
-    supported-eps-codes: ${MEDICITAS_SUPPORTED_EPS_CODES:EPS008,EPS002}
-    supported-eps-names: ${MEDICITAS_SUPPORTED_EPS_NAMES:EPS Mutualser,EPS Coosalud}
   cors:
     # Orígenes autorizadas a invocar la API con credenciales. La app Flutter no es un
     # navegador de origen fijo, así que en desarrollo se declara 'null' como comodín
     # controlado por configuración, no '*' hardcodeado.
-    allowed-origins: ${MEDICITAS_CORS_ALLOWED_ORIGINS:http://localhost:*
+    allowed-origins: ${MEDICITAS_CORS_ALLOWED_ORIGINS:http://localhost:*}
 
 springdoc:
   api-docs:

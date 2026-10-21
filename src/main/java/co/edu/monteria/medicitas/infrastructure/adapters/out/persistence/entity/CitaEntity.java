@@ -36,8 +36,7 @@ public class CitaEntity {
     @Column(nullable = false, length = 20)
     private EstadoCita estado = EstadoCita.PROGRAMADA;
 
-    @Lob
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String observaciones;
 
     @Column(name = "fecha_creacion", nullable = false, updatable = false)

@@ -5,6 +5,7 @@ import co.edu.monteria.medicitas.domain.exception.AccesoNoAutorizadoException;
 import co.edu.monteria.medicitas.domain.exception.AfiliacionNoValidaException;
 import co.edu.monteria.medicitas.domain.exception.ConflictoConcurrenciaException;
 import co.edu.monteria.medicitas.domain.exception.CredencialesInvalidasException;
+import co.edu.monteria.medicitas.domain.exception.DatosInvalidosException;
 import co.edu.monteria.medicitas.domain.exception.RecursoNoEncontradoException;
 import co.edu.monteria.medicitas.domain.exception.ReglaNegocioException;
 import co.edu.monteria.medicitas.infrastructure.adapters.in.rest.dto.ErrorResponseDto;
@@ -35,6 +36,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleAfiliacionNoValida(AfiliacionNoValidaException ex) {
         return responder(HttpStatus.BAD_REQUEST, "Afiliación EPS Bloqueada / No Operativa",
                 ex.getMessage(), ex.getMensajeOrientacion());
+    }
+
+    @ExceptionHandler(DatosInvalidosException.class)
+    public ResponseEntity<ErrorResponseDto> handleDatosInvalidos(DatosInvalidosException ex) {
+        return responder(HttpStatus.BAD_REQUEST, "Datos Inválidos", ex.getMessage(), null);
     }
 
     @ExceptionHandler(AccesoDenegadoHistoriaException.class)

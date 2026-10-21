@@ -62,11 +62,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 Database for dev/testing fallback -->
+        <!-- H2 en memoria: SOLO para la suite de pruebas. La aplicación siempre usa PostgreSQL. -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
 
         <!-- JWT Dependencies -->

@@ -23,8 +23,7 @@ public class NotificacionEntity {
     @Column(nullable = false, length = 150)
     private String titulo;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String mensaje;
 
     @Enumerated(EnumType.STRING)
