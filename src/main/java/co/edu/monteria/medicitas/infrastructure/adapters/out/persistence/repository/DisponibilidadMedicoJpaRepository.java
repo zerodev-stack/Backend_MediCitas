@@ -27,6 +27,19 @@ public interface DisponibilidadMedicoJpaRepository extends JpaRepository<Disponi
 
     List<DisponibilidadMedicoEntity> findByMedicoIdOrderByFechaAscHoraInicioAsc(Long medicoId);
 
+    List<DisponibilidadMedicoEntity> findByBloqueIdOrderByHoraInicioAsc(Long bloqueId);
+
+    List<DisponibilidadMedicoEntity> findByMedicoIdAndEstadoAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+            Long medicoId, EstadoDisponibilidad estado, LocalDate desde);
+
+    @Query("SELECT d FROM DisponibilidadMedicoEntity d " +
+           "WHERE d.medico.id = :medicoId AND d.fecha = :fecha " +
+           "AND d.bloque IS NULL AND d.estado <> :excluido")
+    List<DisponibilidadMedicoEntity> findSueltasDeMedicoEnFecha(
+            @Param("medicoId") Long medicoId,
+            @Param("fecha") LocalDate fecha,
+            @Param("excluido") EstadoDisponibilidad excluido);
+
     /**
      * Transición de estado condicionada (compare-and-set).
      *

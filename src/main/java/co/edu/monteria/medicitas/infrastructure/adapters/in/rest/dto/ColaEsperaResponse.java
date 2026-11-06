@@ -12,7 +12,9 @@ public record ColaEsperaResponse(
         EspecialidadResponse especialidad,
         Ips ips,
         LocalDateTime fechaSolicitud,
-        EstadoColaEspera estado
+        EstadoColaEspera estado,
+        ServicioResponse servicio,
+        SedeResponse sede
 ) {
     public static ColaEsperaResponse desde(ColaEspera cola) {
         if (cola == null) {
@@ -24,7 +26,9 @@ public record ColaEsperaResponse(
                 EspecialidadResponse.desde(cola.getEspecialidad()),
                 cola.getIps(),
                 cola.getFechaSolicitud(),
-                cola.getEstado()
+                cola.getEstado(),
+                ServicioResponse.desde(cola.getServicio()),
+                SedeResponse.desde(cola.getSede())
         );
     }
 }

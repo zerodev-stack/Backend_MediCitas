@@ -34,6 +34,11 @@ public class DisponibilidadMedicoEntity {
     @Column(nullable = false, length = 20)
     private EstadoDisponibilidad estado = EstadoDisponibilidad.LIBRE;
 
+    /** Bloque que generó este cupo; null en las franjas sueltas */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bloque_id")
+    private BloqueDisponibilidadEntity bloque;
+
     public DisponibilidadMedicoEntity() {}
 
     public Long getId() { return id; }
@@ -53,4 +58,7 @@ public class DisponibilidadMedicoEntity {
 
     public EstadoDisponibilidad getEstado() { return estado; }
     public void setEstado(EstadoDisponibilidad estado) { this.estado = estado; }
+
+    public BloqueDisponibilidadEntity getBloque() { return bloque; }
+    public void setBloque(BloqueDisponibilidadEntity bloque) { this.bloque = bloque; }
 }

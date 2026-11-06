@@ -21,6 +21,7 @@ import co.edu.monteria.medicitas.domain.model.enums.TipoNotificacion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -214,6 +215,57 @@ public class CitaService implements AgendarCitaUseCase {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Registro de médico no encontrado"))
                 .getId();
         return citaRepository.buscarPorMedicoId(medicoId);
+    }
+
+    @Override
+    public Cita marcarAtendida(Long citaId, Long medicoUsuarioId) {
+        Cita cita = citaDeMiAgenda(citaId, medicoUsuarioId);
+        if (cita.getEstado() != EstadoCita.PROGRAMADA) {
+            throw new ReglaNegocioException("Solo es posible marcar como atendida una cita PROGRAMADA.");
+        }
+        if (cita.getDisponibilidad().getFecha().isAfter(LocalDate.now())) {
+            throw new ReglaNegocioException("Solo puedes marcar como atendida una cita de hoy o de días anteriores.");
+        }
+        cita.setEstado(EstadoCita.ATENDIDA);
+        return citaRepository.guardar(cita);
+    }
+
+    @Override
+    public Cita cancelarPorMedico(Long citaId, Long medicoUsuarioId) {
+        Cita cita = citaDeMiAgenda(citaId, medicoUsuarioId);
+        if (cita.getEstado() != EstadoCita.PROGRAMADA) {
+            throw new ReglaNegocioException("Solo es posible cancelar citas en estado PROGRAMADA.");
+        }
+        cita.setEstado(EstadoCita.CANCELADA);
+        citaRepository.guardar(cita);
+
+        // A diferencia de la cancelación del paciente, el cupo NO vuelve a quedar libre:
+        // el médico no puede atender en ese horario, así que ofrecerlo a otro paciente o a
+        // la cola FIFO generaría una cita que tampoco se cumpliría.
+        DisponibilidadMedico disponibilidad = cita.getDisponibilidad();
+        disponibilidadRepository.transicionarEstadoSiCoincide(
+                disponibilidad.getId(), EstadoDisponibilidad.OCUPADO, EstadoDisponibilidad.CANCELADO);
+        disponibilidad.setEstado(EstadoDisponibilidad.CANCELADO);
+
+        notificacionPort.enviarNotificacion(
+                cita.getPaciente(),
+                "Tu cita fue cancelada por el profesional",
+                disponibilidad.getMedico().getUsuario().getNombreCompleto() + " canceló tu cita de "
+                        + disponibilidad.getMedico().getEspecialidad().getNombre() + " del " + disponibilidad.getFecha()
+                        + " a las " + disponibilidad.getHoraInicio() + ". Puedes agendar un nuevo horario desde la app.",
+                TipoNotificacion.PUSH
+        );
+        return cita;
+    }
+
+    private Cita citaDeMiAgenda(Long citaId, Long medicoUsuarioId) {
+        Cita cita = citaRepository.buscarPorId(citaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cita médica no encontrada"));
+        Long duenoAgenda = cita.getDisponibilidad().getMedico().getUsuario().getId();
+        if (!duenoAgenda.equals(medicoUsuarioId)) {
+            throw new AccesoNoAutorizadoException("Esta cita no pertenece a tu agenda.");
+        }
+        return cita;
     }
 
     private void verificarPertenencia(Cita cita, Long pacienteId, String operacion) {

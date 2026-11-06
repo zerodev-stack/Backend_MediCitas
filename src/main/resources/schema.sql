@@ -178,6 +178,74 @@ CREATE TABLE IF NOT EXISTS eps_affiliates (
     eps_id BIGINT NOT NULL REFERENCES eps(id)
 );
 
+-- ---------------------------------------------------------------------------
+-- 14. SEDES DE CADA IPS
+-- ---------------------------------------------------------------------------
+-- Una IPS atiende en varias sedes físicas (Centro, Norte...). El médico elige en cuáles
+-- ofrece cada servicio y cada bloque de disponibilidad se publica en una sede concreta.
+CREATE TABLE IF NOT EXISTS sedes (
+    id BIGSERIAL PRIMARY KEY,
+    ips_id BIGINT NOT NULL REFERENCES ips(id) ON DELETE CASCADE,
+    nombre VARCHAR(80) NOT NULL,
+    direccion VARCHAR(200),
+    CONSTRAINT uk_sede_ips_nombre UNIQUE (ips_id, nombre)
+);
+
+-- ---------------------------------------------------------------------------
+-- 15. CATÁLOGO DE SERVICIOS POR ESPECIALIDAD
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS servicios (
+    id BIGSERIAL PRIMARY KEY,
+    especialidad_id BIGINT NOT NULL REFERENCES especialidades(id) ON DELETE CASCADE,
+    nombre VARCHAR(120) NOT NULL,
+    tipo VARCHAR(30) NOT NULL, -- CONSULTA, PROCEDIMIENTO_MEDICO, PROCEDIMIENTO_QUIRURGICO, EXAMEN
+    CONSTRAINT uk_servicio_especialidad_nombre UNIQUE (especialidad_id, nombre)
+);
+
+-- ---------------------------------------------------------------------------
+-- 16. SERVICIOS QUE OFRECE CADA MÉDICO Y EN QUÉ SEDE ("Mis servicios y sedes")
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS medico_servicios (
+    id BIGSERIAL PRIMARY KEY,
+    medico_id BIGINT NOT NULL REFERENCES medicos(id) ON DELETE CASCADE,
+    servicio_id BIGINT NOT NULL REFERENCES servicios(id) ON DELETE CASCADE,
+    sede_id BIGINT NOT NULL REFERENCES sedes(id) ON DELETE CASCADE,
+    CONSTRAINT uk_medico_servicio_sede UNIQUE (medico_id, servicio_id, sede_id)
+);
+
+-- ---------------------------------------------------------------------------
+-- 17. BLOQUES DE DISPONIBILIDAD
+-- ---------------------------------------------------------------------------
+-- El médico publica un bloque (servicio + sede + fecha + horario + duración de cupo) y
+-- el sistema lo divide en cupos individuales de 'disponibilidades_medicas'. Los cupos
+-- siguen siendo la unidad que el paciente reserva, así que el agendamiento, la cola FIFO
+-- y la restricción contra el doble agendamiento no cambian.
+CREATE TABLE IF NOT EXISTS bloques_disponibilidad (
+    id BIGSERIAL PRIMARY KEY,
+    medico_id BIGINT NOT NULL REFERENCES medicos(id) ON DELETE CASCADE,
+    servicio_id BIGINT NOT NULL REFERENCES servicios(id),
+    sede_id BIGINT NOT NULL REFERENCES sedes(id),
+    fecha DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    duracion_cupo_minutos INTEGER NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO', -- ACTIVO, CANCELADO
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_bloque_horario_orden CHECK (hora_fin > hora_inicio),
+    CONSTRAINT ck_bloque_duracion_positiva CHECK (duracion_cupo_minutos > 0)
+);
+
+-- Columnas añadidas a tablas existentes. Con 'IF NOT EXISTS' el script sigue siendo
+-- idempotente y actualiza una base creada con una versión anterior del esquema.
+ALTER TABLE disponibilidades_medicas ADD COLUMN IF NOT EXISTS bloque_id BIGINT REFERENCES bloques_disponibilidad(id);
+ALTER TABLE medicos ADD COLUMN IF NOT EXISTS ciudad_atencion VARCHAR(80);
+ALTER TABLE medicos ADD COLUMN IF NOT EXISTS correo_contacto VARCHAR(120);
+ALTER TABLE medicos ADD COLUMN IF NOT EXISTS telefono_contacto VARCHAR(30);
+-- Servicio y sede que pidió el paciente al entrar en la cola. Son opcionales: una
+-- solicitud sin ellos acepta cualquier cupo de la especialidad e IPS.
+ALTER TABLE colas_espera ADD COLUMN IF NOT EXISTS servicio_id BIGINT REFERENCES servicios(id);
+ALTER TABLE colas_espera ADD COLUMN IF NOT EXISTS sede_id BIGINT REFERENCES sedes(id);
+
 -- ============================================================================
 -- DATOS INICIALES
 -- ============================================================================
@@ -271,6 +339,44 @@ INSERT INTO eps_affiliates (id, document_number, first_name, middle_name, first_
 (6, '1067890128', 'Pedro', 'José', 'Ramírez', 'Soto', 3)
 ON CONFLICT (id) DO NOTHING;
 
+-- Sedes, servicios y configuración inicial de los médicos de demostración: sin ellas,
+-- un médico recién instalado no podría publicar bloques desde la app.
+INSERT INTO sedes (id, ips_id, nombre, direccion) VALUES
+(1, 1, 'Sede Centro', 'Calle 29 # 14-20, La Julia'),
+(2, 1, 'Sede Norte', 'Carrera 6 # 62-15, La Castellana'),
+(3, 2, 'Sede Centro', 'Carrera 3 # 24-45, Centro'),
+(4, 2, 'Sede Norte', 'Calle 41 # 8-30, Los Laureles'),
+(5, 3, 'Sede Centro', 'Calle 27 # 5-10, Centro'),
+(6, 3, 'Sede Norte', 'Avenida Circunvalar # 48-12, Mocarí')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO servicios (id, especialidad_id, nombre, tipo) VALUES
+(1, 1, 'Consulta de medicina general', 'CONSULTA'),
+(2, 1, 'Control de enfermedades crónicas', 'CONSULTA'),
+(3, 1, 'Retiro de suturas', 'PROCEDIMIENTO_MEDICO'),
+(4, 2, 'Consulta de pediatría', 'CONSULTA'),
+(5, 2, 'Control de crecimiento y desarrollo', 'CONSULTA'),
+(6, 3, 'Consulta de cardiología', 'CONSULTA'),
+(7, 3, 'Electrocardiograma', 'EXAMEN'),
+(8, 3, 'Prueba de esfuerzo', 'EXAMEN'),
+(9, 4, 'Consulta de ginecología', 'CONSULTA'),
+(10, 4, 'Citología', 'EXAMEN'),
+(11, 5, 'Consulta de odontología', 'CONSULTA'),
+(12, 5, 'Limpieza dental', 'PROCEDIMIENTO_MEDICO')
+ON CONFLICT DO NOTHING;
+
+-- La configuración de demostración solo se siembra con la tabla vacía: este script corre
+-- en cada arranque, y reinsertarla devolvería servicios que el médico ya quitó (o
+-- chocaría con la restricción única si los volvió a agregar con otro id).
+INSERT INTO medico_servicios (id, medico_id, servicio_id, sede_id)
+SELECT v.id, v.medico_id, v.servicio_id, v.sede_id
+FROM (VALUES (1, 1, 1, 1), (2, 1, 2, 1), (3, 1, 3, 2), (4, 2, 6, 3), (5, 2, 7, 3), (6, 2, 8, 4))
+    AS v(id, medico_id, servicio_id, sede_id)
+WHERE NOT EXISTS (SELECT 1 FROM medico_servicios)
+ON CONFLICT DO NOTHING;
+
+UPDATE medicos SET ciudad_atencion = 'Montería, Córdoba' WHERE ciudad_atencion IS NULL;
+
 -- ---------------------------------------------------------------------------
 -- REALINEACIÓN DE LAS SECUENCIAS
 -- ---------------------------------------------------------------------------
@@ -294,3 +400,7 @@ SELECT setval(pg_get_serial_sequence('historias_clinicas', 'id'), GREATEST((SELE
 SELECT setval(pg_get_serial_sequence('autorizaciones_acceso', 'id'), GREATEST((SELECT MAX(id) FROM autorizaciones_acceso), 1));
 SELECT setval(pg_get_serial_sequence('notificaciones', 'id'), GREATEST((SELECT MAX(id) FROM notificaciones), 1));
 SELECT setval(pg_get_serial_sequence('eps_affiliates', 'id'), GREATEST((SELECT MAX(id) FROM eps_affiliates), 1));
+SELECT setval(pg_get_serial_sequence('sedes', 'id'), GREATEST((SELECT MAX(id) FROM sedes), 1));
+SELECT setval(pg_get_serial_sequence('servicios', 'id'), GREATEST((SELECT MAX(id) FROM servicios), 1));
+SELECT setval(pg_get_serial_sequence('medico_servicios', 'id'), GREATEST((SELECT MAX(id) FROM medico_servicios), 1));
+SELECT setval(pg_get_serial_sequence('bloques_disponibilidad', 'id'), GREATEST((SELECT MAX(id) FROM bloques_disponibilidad), 1));

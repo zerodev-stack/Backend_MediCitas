@@ -74,8 +74,13 @@ public class ReasignacionFifoService implements ReasignacionFifoUseCase {
         Long ipsId = disponibilidad.getMedico().getIps().getId();
 
         // (1) Cabecera de la cola con bloqueo de escritura: es el recurso disputado.
-        Optional<ColaEspera> optCola = colaEsperaRepository.obtenerCabeceraFifoBloqueada(
-                especialidadId, ipsId, EstadoColaEspera.EN_ESPERA);
+        //     Un cupo de bloque solo atiende solicitudes de su mismo servicio y sede (o sin
+        //     preferencia); una franja suelta, solo solicitudes sin preferencia.
+        var bloque = disponibilidad.getBloque();
+        Optional<ColaEspera> optCola = bloque == null
+                ? colaEsperaRepository.obtenerCabeceraFifoBloqueada(especialidadId, ipsId, EstadoColaEspera.EN_ESPERA)
+                : colaEsperaRepository.obtenerCabeceraFifoBloqueada(especialidadId, ipsId,
+                        bloque.getServicio().getId(), bloque.getSede().getId(), EstadoColaEspera.EN_ESPERA);
 
         if (optCola.isEmpty()) {
             return false;

@@ -10,6 +10,10 @@ public class ColaEspera {
     private Ips ips;
     private LocalDateTime fechaSolicitud;
     private EstadoColaEspera estado;
+    // Opcionales: si el paciente pidió un servicio o una sede concretos, solo se le
+    // asignan cupos que coincidan. Si son null, vale cualquier cupo de la especialidad e IPS.
+    private Servicio servicio;
+    private Sede sede;
 
     public ColaEspera() {}
 
@@ -39,4 +43,10 @@ public class ColaEspera {
 
     public EstadoColaEspera getEstado() { return estado; }
     public void setEstado(EstadoColaEspera estado) { this.estado = estado; }
+
+    public Servicio getServicio() { return servicio; }
+    public void setServicio(Servicio servicio) { this.servicio = servicio; }
+
+    public Sede getSede() { return sede; }
+    public void setSede(Sede sede) { this.sede = sede; }
 }

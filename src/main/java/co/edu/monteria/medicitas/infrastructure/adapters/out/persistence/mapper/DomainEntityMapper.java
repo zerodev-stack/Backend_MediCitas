@@ -73,13 +73,17 @@ public class DomainEntityMapper {
 
     public Medico toMedicoDomain(MedicoEntity entity) {
         if (entity == null) return null;
-        return new Medico(
+        Medico medico = new Medico(
                 entity.getId(),
                 toUsuarioDomain(entity.getUsuario()),
                 toEspecialidadDomain(entity.getEspecialidad()),
                 toIpsDomain(entity.getIps()),
                 entity.getRegistroMedico()
         );
+        medico.setCiudadAtencion(entity.getCiudadAtencion());
+        medico.setCorreoContacto(entity.getCorreoContacto());
+        medico.setTelefonoContacto(entity.getTelefonoContacto());
+        return medico;
     }
 
     public MedicoEntity toMedicoEntity(Medico domain) {
@@ -90,12 +94,15 @@ public class DomainEntityMapper {
         entity.setEspecialidad(toEspecialidadEntity(domain.getEspecialidad()));
         entity.setIps(toIpsEntity(domain.getIps()));
         entity.setRegistroMedico(domain.getRegistroMedico());
+        entity.setCiudadAtencion(domain.getCiudadAtencion());
+        entity.setCorreoContacto(domain.getCorreoContacto());
+        entity.setTelefonoContacto(domain.getTelefonoContacto());
         return entity;
     }
 
     public DisponibilidadMedico toDisponibilidadDomain(DisponibilidadMedicoEntity entity) {
         if (entity == null) return null;
-        return new DisponibilidadMedico(
+        DisponibilidadMedico disponibilidad = new DisponibilidadMedico(
                 entity.getId(),
                 toMedicoDomain(entity.getMedico()),
                 entity.getFecha(),
@@ -103,6 +110,8 @@ public class DomainEntityMapper {
                 entity.getHoraFin(),
                 entity.getEstado()
         );
+        disponibilidad.setBloque(toBloqueDomain(entity.getBloque()));
+        return disponibilidad;
     }
 
     public DisponibilidadMedicoEntity toDisponibilidadEntity(DisponibilidadMedico domain) {
@@ -114,6 +123,7 @@ public class DomainEntityMapper {
         entity.setHoraInicio(domain.getHoraInicio());
         entity.setHoraFin(domain.getHoraFin());
         entity.setEstado(domain.getEstado());
+        entity.setBloque(toBloqueEntity(domain.getBloque()));
         return entity;
     }
 
@@ -149,7 +159,7 @@ public class DomainEntityMapper {
 
     public ColaEspera toColaEsperaDomain(ColaEsperaEntity entity) {
         if (entity == null) return null;
-        return new ColaEspera(
+        ColaEspera cola = new ColaEspera(
                 entity.getId(),
                 toUsuarioDomain(entity.getPaciente()),
                 toEspecialidadDomain(entity.getEspecialidad()),
@@ -157,6 +167,9 @@ public class DomainEntityMapper {
                 entity.getFechaSolicitud(),
                 entity.getEstado()
         );
+        cola.setServicio(toServicioDomain(entity.getServicio()));
+        cola.setSede(toSedeDomain(entity.getSede()));
+        return cola;
     }
 
     public ColaEsperaEntity toColaEsperaEntity(ColaEspera domain) {
@@ -170,6 +183,8 @@ public class DomainEntityMapper {
             entity.setFechaSolicitud(domain.getFechaSolicitud());
         }
         entity.setEstado(domain.getEstado());
+        entity.setServicio(toServicioEntity(domain.getServicio()));
+        entity.setSede(toSedeEntity(domain.getSede()));
         return entity;
     }
 
@@ -251,6 +266,87 @@ public class DomainEntityMapper {
         entity.setLeida(domain.isLeida());
         if (domain.getFechaEnvio() != null) {
             entity.setFechaEnvio(domain.getFechaEnvio());
+        }
+        return entity;
+    }
+
+    public Sede toSedeDomain(SedeEntity entity) {
+        if (entity == null) return null;
+        return new Sede(entity.getId(), toIpsDomain(entity.getIps()), entity.getNombre(), entity.getDireccion());
+    }
+
+    public SedeEntity toSedeEntity(Sede domain) {
+        if (domain == null) return null;
+        SedeEntity entity = new SedeEntity();
+        entity.setId(domain.getId());
+        entity.setIps(toIpsEntity(domain.getIps()));
+        entity.setNombre(domain.getNombre());
+        entity.setDireccion(domain.getDireccion());
+        return entity;
+    }
+
+    public Servicio toServicioDomain(ServicioEntity entity) {
+        if (entity == null) return null;
+        return new Servicio(entity.getId(), toEspecialidadDomain(entity.getEspecialidad()),
+                entity.getNombre(), entity.getTipo());
+    }
+
+    public ServicioEntity toServicioEntity(Servicio domain) {
+        if (domain == null) return null;
+        ServicioEntity entity = new ServicioEntity();
+        entity.setId(domain.getId());
+        entity.setEspecialidad(toEspecialidadEntity(domain.getEspecialidad()));
+        entity.setNombre(domain.getNombre());
+        entity.setTipo(domain.getTipo());
+        return entity;
+    }
+
+    public ServicioMedico toServicioMedicoDomain(ServicioMedicoEntity entity) {
+        if (entity == null) return null;
+        return new ServicioMedico(entity.getId(), toMedicoDomain(entity.getMedico()),
+                toServicioDomain(entity.getServicio()), toSedeDomain(entity.getSede()));
+    }
+
+    public ServicioMedicoEntity toServicioMedicoEntity(ServicioMedico domain) {
+        if (domain == null) return null;
+        ServicioMedicoEntity entity = new ServicioMedicoEntity();
+        entity.setId(domain.getId());
+        entity.setMedico(toMedicoEntity(domain.getMedico()));
+        entity.setServicio(toServicioEntity(domain.getServicio()));
+        entity.setSede(toSedeEntity(domain.getSede()));
+        return entity;
+    }
+
+    public BloqueDisponibilidad toBloqueDomain(BloqueDisponibilidadEntity entity) {
+        if (entity == null) return null;
+        return new BloqueDisponibilidad(
+                entity.getId(),
+                toMedicoDomain(entity.getMedico()),
+                toServicioDomain(entity.getServicio()),
+                toSedeDomain(entity.getSede()),
+                entity.getFecha(),
+                entity.getHoraInicio(),
+                entity.getHoraFin(),
+                entity.getDuracionCupoMinutos(),
+                entity.getEstado(),
+                entity.getFechaCreacion()
+        );
+    }
+
+    public BloqueDisponibilidadEntity toBloqueEntity(BloqueDisponibilidad domain) {
+        if (domain == null) return null;
+        BloqueDisponibilidadEntity entity = new BloqueDisponibilidadEntity();
+        entity.setId(domain.getId());
+        entity.setMedico(toMedicoEntity(domain.getMedico()));
+        entity.setServicio(toServicioEntity(domain.getServicio()));
+        entity.setSede(toSedeEntity(domain.getSede()));
+        entity.setFecha(domain.getFecha());
+        entity.setHoraInicio(domain.getHoraInicio());
+        entity.setHoraFin(domain.getHoraFin());
+        entity.setDuracionCupoMinutos(domain.getDuracionCupoMinutos());
+        entity.setEstado(domain.getEstado());
+        if (domain.getFechaCreacion() != null) {
+            entity.setFechaCreacion(domain.getFechaCreacion());
         }
         return entity;
     }

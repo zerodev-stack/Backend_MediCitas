@@ -6,6 +6,11 @@ public class Medico {
     private Especialidad especialidad;
     private Ips ips;
     private String registroMedico;
+    // Datos que el propio médico edita desde "Editar datos". Los anteriores los fija la
+    // institución y la app los muestra como no editables.
+    private String ciudadAtencion;
+    private String correoContacto;
+    private String telefonoContacto;
 
     public Medico() {}
 
@@ -31,4 +36,13 @@ public class Medico {
 
     public String getRegistroMedico() { return registroMedico; }
     public void setRegistroMedico(String registroMedico) { this.registroMedico = registroMedico; }
+
+    public String getCiudadAtencion() { return ciudadAtencion; }
+    public void setCiudadAtencion(String ciudadAtencion) { this.ciudadAtencion = ciudadAtencion; }
+
+    public String getCorreoContacto() { return correoContacto; }
+    public void setCorreoContacto(String correoContacto) { this.correoContacto = correoContacto; }
+
+    public String getTelefonoContacto() { return telefonoContacto; }
+    public void setTelefonoContacto(String telefonoContacto) { this.telefonoContacto = telefonoContacto; }
 }

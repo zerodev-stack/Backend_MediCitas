@@ -52,6 +52,25 @@ public class DisponibilidadPersistenceAdapter implements DisponibilidadRepositor
     }
 
     @Override
+    public List<DisponibilidadMedico> buscarPorBloqueId(Long bloqueId) {
+        return repository.findByBloqueIdOrderByHoraInicioAsc(bloqueId)
+                .stream().map(mapper::toDisponibilidadDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DisponibilidadMedico> buscarLibresDeMedicoDesde(Long medicoId, LocalDate desde) {
+        return repository.findByMedicoIdAndEstadoAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+                        medicoId, EstadoDisponibilidad.LIBRE, desde)
+                .stream().map(mapper::toDisponibilidadDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DisponibilidadMedico> buscarSueltasVigentesDeMedico(Long medicoId, LocalDate fecha) {
+        return repository.findSueltasDeMedicoEnFecha(medicoId, fecha, EstadoDisponibilidad.CANCELADO)
+                .stream().map(mapper::toDisponibilidadDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public boolean transicionarEstadoSiCoincide(Long disponibilidadId,
                                                 EstadoDisponibilidad esperado,
                                                 EstadoDisponibilidad nuevo) {

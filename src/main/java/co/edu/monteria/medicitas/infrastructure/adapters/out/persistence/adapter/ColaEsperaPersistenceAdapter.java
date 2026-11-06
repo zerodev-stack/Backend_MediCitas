@@ -47,14 +47,22 @@ public class ColaEsperaPersistenceAdapter implements ColaEsperaRepositoryPort {
 
     @Override
     @Transactional
-    public Optional<ColaEspera> obtenerCabeceraFifoBloqueada(Long especialidadId, Long ipsId, EstadoColaEspera estado) {
+    public Optional<ColaEspera> obtenerCabeceraFifoBloqueada(Long especialidadId, Long ipsId, Long servicioId,
+                                                             Long sedeId, EstadoColaEspera estado) {
         // Sesión de escritura, no de solo lectura: un SELECT ... FOR UPDATE dentro de
         // una transacción marcada como readOnly puede ser degradado por el proveedor
         // de JPA, y entonces dos reasignaciones simultáneas leerían la misma cabecera.
-        return repository.findFifoHeadForUpdate(especialidadId, ipsId, estado, PageRequest.of(0, 1))
+        return repository.findFifoHeadForUpdate(especialidadId, ipsId, servicioId, sedeId, estado, PageRequest.of(0, 1))
                 .stream()
                 .findFirst()
                 .map(mapper::toColaEsperaDomain);
+    }
+
+    @Override
+    public List<ColaEspera> buscarEnEspera(Long especialidadId, Long ipsId) {
+        return repository.findByEspecialidadIdAndIpsIdAndEstadoOrderByFechaSolicitudAscIdAsc(
+                        especialidadId, ipsId, EstadoColaEspera.EN_ESPERA)
+                .stream().map(mapper::toColaEsperaDomain).collect(Collectors.toList());
     }
 
     @Override

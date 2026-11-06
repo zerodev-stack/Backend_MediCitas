@@ -36,6 +36,16 @@ public class ColaEsperaEntity {
     @Column(nullable = false, length = 20)
     private EstadoColaEspera estado = EstadoColaEspera.EN_ESPERA;
 
+    /** Servicio solicitado (opcional) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "servicio_id")
+    private ServicioEntity servicio;
+
+    /** Sede solicitada (opcional) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sede_id")
+    private SedeEntity sede;
+
     public ColaEsperaEntity() {}
 
     public Long getId() { return id; }
@@ -55,4 +65,10 @@ public class ColaEsperaEntity {
 
     public EstadoColaEspera getEstado() { return estado; }
     public void setEstado(EstadoColaEspera estado) { this.estado = estado; }
+
+    public ServicioEntity getServicio() { return servicio; }
+    public void setServicio(ServicioEntity servicio) { this.servicio = servicio; }
+
+    public SedeEntity getSede() { return sede; }
+    public void setSede(SedeEntity sede) { this.sede = sede; }
 }

@@ -5,6 +5,7 @@ import co.edu.monteria.medicitas.domain.exception.AccesoNoAutorizadoException;
 import co.edu.monteria.medicitas.domain.exception.AfiliacionNoValidaException;
 import co.edu.monteria.medicitas.domain.exception.ConflictoConcurrenciaException;
 import co.edu.monteria.medicitas.domain.exception.CredencialesInvalidasException;
+import co.edu.monteria.medicitas.domain.exception.CruceHorarioException;
 import co.edu.monteria.medicitas.domain.exception.DatosInvalidosException;
 import co.edu.monteria.medicitas.domain.exception.RecursoNoEncontradoException;
 import co.edu.monteria.medicitas.domain.exception.ReglaNegocioException;
@@ -86,6 +87,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<ErrorResponseDto> handleRecursoNoEncontrado(RecursoNoEncontradoException ex) {
         return responder(HttpStatus.NOT_FOUND, "Recurso No Encontrado", ex.getMessage(), null);
+    }
+
+    /**
+     * Cruce de horarios al publicar disponibilidad. Es 409 y no 422 para que la app lo
+     * distinga de una validación cualquiera y muestre la pantalla específica del cruce.
+     */
+    @ExceptionHandler(CruceHorarioException.class)
+    public ResponseEntity<ErrorResponseDto> handleCruceHorario(CruceHorarioException ex) {
+        return responder(HttpStatus.CONFLICT, "Cruce de Horarios", ex.getMessage(), null);
     }
 
     @ExceptionHandler(ReglaNegocioException.class)

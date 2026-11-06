@@ -9,4 +9,7 @@ public interface CitaRepositoryPort {
     Optional<Cita> buscarPorId(Long id);
     List<Cita> buscarPorPacienteId(Long pacienteId);
     List<Cita> buscarPorMedicoId(Long medicoId);
+
+    /** Citas PROGRAMADAS que ocupan cupos del bloque indicado. */
+    List<Cita> buscarProgramadasPorBloqueId(Long bloqueId);
 }

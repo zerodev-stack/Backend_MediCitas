@@ -11,6 +11,9 @@ public class DisponibilidadMedico {
     private LocalTime horaInicio;
     private LocalTime horaFin;
     private EstadoDisponibilidad estado;
+    // Bloque del que se generó este cupo. Es null en las franjas sueltas publicadas con
+    // POST /disponibilidades, que no pertenecen a ningún servicio ni sede.
+    private BloqueDisponibilidad bloque;
 
     public DisponibilidadMedico() {}
 
@@ -40,4 +43,7 @@ public class DisponibilidadMedico {
 
     public EstadoDisponibilidad getEstado() { return estado; }
     public void setEstado(EstadoDisponibilidad estado) { this.estado = estado; }
+
+    public BloqueDisponibilidad getBloque() { return bloque; }
+    public void setBloque(BloqueDisponibilidad bloque) { this.bloque = bloque; }
 }

@@ -31,13 +31,16 @@ public class ColaEsperaController {
     @PostMapping("/unirse")
     @Operation(summary = "Unirse a Cola de Espera FIFO",
             description = "Registra al paciente autenticado en la cola de una especialidad e IPS para "
-                    + "asignación automática")
+                    + "asignación automática. Servicio y sede son opcionales: si se indican, solo se asignan cupos que "
+                    + "coincidan con ellos.")
     public ResponseEntity<ColaEsperaResponse> unirseAColaEspera(
             @RequestParam Long especialidadId,
-            @RequestParam Long ipsId) {
+            @RequestParam Long ipsId,
+            @RequestParam(required = false) Long servicioId,
+            @RequestParam(required = false) Long sedeId) {
         ColaEsperaResponse enEspera = ColaEsperaResponse.desde(
                 gestionarColaEsperaUseCase.unirseAColaEspera(
-                        contextoUsuario.usuarioActual().getId(), especialidadId, ipsId));
+                        contextoUsuario.usuarioActual().getId(), especialidadId, ipsId, servicioId, sedeId));
         return ResponseEntity.status(HttpStatus.CREATED).body(enEspera);
     }
 

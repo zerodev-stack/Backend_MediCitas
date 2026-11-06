@@ -33,6 +33,18 @@ public class MedicoEntity {
     @Column(name = "registro_medico", nullable = false, unique = true, length = 50)
     private String registroMedico;
 
+    /** Ciudad donde el médico atiende; editable por el propio médico */
+    @Column(name = "ciudad_atencion", length = 80)
+    private String ciudadAtencion;
+
+    /** Correo de contacto profesional (opcional, distinto del correo de acceso) */
+    @Column(name = "correo_contacto", length = 120)
+    private String correoContacto;
+
+    /** Teléfono de contacto profesional (opcional) */
+    @Column(name = "telefono_contacto", length = 30)
+    private String telefonoContacto;
+
     public MedicoEntity() {}
 
     public Long getId() { return id; }
@@ -49,4 +61,13 @@ public class MedicoEntity {
 
     public String getRegistroMedico() { return registroMedico; }
     public void setRegistroMedico(String registroMedico) { this.registroMedico = registroMedico; }
+
+    public String getCiudadAtencion() { return ciudadAtencion; }
+    public void setCiudadAtencion(String ciudadAtencion) { this.ciudadAtencion = ciudadAtencion; }
+
+    public String getCorreoContacto() { return correoContacto; }
+    public void setCorreoContacto(String correoContacto) { this.correoContacto = correoContacto; }
+
+    public String getTelefonoContacto() { return telefonoContacto; }
+    public void setTelefonoContacto(String telefonoContacto) { this.telefonoContacto = telefonoContacto; }
 }

@@ -24,8 +24,24 @@ public interface ColaEsperaRepositoryPort {
      * mismo cupo. El adaptador de persistencia debe traducir este método a
      * 'SELECT ... FOR UPDATE'.
      */
+    default Optional<ColaEspera> obtenerCabeceraFifoBloqueada(
+            Long especialidadId, Long ipsId, EstadoColaEspera estado) {
+        return obtenerCabeceraFifoBloqueada(especialidadId, ipsId, null, null, estado);
+    }
+
+    /**
+     * Igual que la anterior, pero solo considera solicitudes compatibles con el cupo: las que
+     * no pidieron servicio o sede, o pidieron exactamente los del cupo. Un cupo sin bloque
+     * (servicioId y sedeId null) solo atiende solicitudes sin servicio ni sede.
+     */
     Optional<ColaEspera> obtenerCabeceraFifoBloqueada(
-            Long especialidadId, Long ipsId, EstadoColaEspera estado);
+            Long especialidadId, Long ipsId, Long servicioId, Long sedeId, EstadoColaEspera estado);
+
+    /**
+     * Solicitudes EN_ESPERA de una especialidad e IPS en orden FIFO, sin bloqueo: es la
+     * lista que consulta el médico, no la que se usa para asignar automáticamente.
+     */
+    List<ColaEspera> buscarEnEspera(Long especialidadId, Long ipsId);
 
     boolean existeEnEspera(Long pacienteId, Long especialidadId, Long ipsId, EstadoColaEspera estado);
 }

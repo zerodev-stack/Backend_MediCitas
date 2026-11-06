@@ -17,6 +17,9 @@ public interface ColaEsperaJpaRepository extends JpaRepository<ColaEsperaEntity,
 
     List<ColaEsperaEntity> findByPacienteIdOrderByFechaSolicitudDesc(Long pacienteId);
 
+    List<ColaEsperaEntity> findByEspecialidadIdAndIpsIdAndEstadoOrderByFechaSolicitudAscIdAsc(
+            Long especialidadId, Long ipsId, EstadoColaEspera estado);
+
     /**
      * Cabecera de la cola FIFO tomada con bloqueo de escritura.
      *
@@ -40,10 +43,14 @@ public interface ColaEsperaJpaRepository extends JpaRepository<ColaEsperaEntity,
            "WHERE c.especialidad.id = :especialidadId " +
            "  AND c.ips.id = :ipsId " +
            "  AND c.estado = :estado " +
+           "  AND (c.servicio IS NULL OR c.servicio.id = :servicioId) " +
+           "  AND (c.sede IS NULL OR c.sede.id = :sedeId) " +
            "ORDER BY c.fechaSolicitud ASC, c.id ASC")
     List<ColaEsperaEntity> findFifoHeadForUpdate(
             @Param("especialidadId") Long especialidadId,
             @Param("ipsId") Long ipsId,
+            @Param("servicioId") Long servicioId,
+            @Param("sedeId") Long sedeId,
             @Param("estado") EstadoColaEspera estado,
             Pageable pageable);
 

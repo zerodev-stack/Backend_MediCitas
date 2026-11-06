@@ -80,6 +80,24 @@ public class CitaController {
         return ResponseEntity.ok(citas);
     }
 
+    @PostMapping("/{id}/atender")
+    @PreAuthorize("hasRole('MEDICO')")
+    @Operation(summary = "Marcar cita como atendida",
+            description = "El médico dueño de la agenda registra la atención de una cita de hoy o anterior")
+    public ResponseEntity<CitaResponse> marcarAtendida(@PathVariable Long id) {
+        return ResponseEntity.ok(CitaResponse.desde(
+                agendarCitaUseCase.marcarAtendida(id, contextoUsuario.usuarioActual().getId())));
+    }
+
+    @PostMapping("/{id}/cancelar-por-medico")
+    @PreAuthorize("hasRole('MEDICO')")
+    @Operation(summary = "Cancelar cita desde la agenda del médico",
+            description = "Cancela la cita, retira el cupo de la oferta y notifica al paciente")
+    public ResponseEntity<CitaResponse> cancelarPorMedico(@PathVariable Long id) {
+        return ResponseEntity.ok(CitaResponse.desde(
+                agendarCitaUseCase.cancelarPorMedico(id, contextoUsuario.usuarioActual().getId())));
+    }
+
     @GetMapping("/agenda")
     @PreAuthorize("hasRole('MEDICO')")
     @Operation(summary = "Consultar mi agenda", description = "Citas programadas del médico autenticado")

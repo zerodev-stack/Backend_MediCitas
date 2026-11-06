@@ -2,6 +2,7 @@ package co.edu.monteria.medicitas.infrastructure.adapters.out.persistence.adapte
 
 import co.edu.monteria.medicitas.application.ports.out.CitaRepositoryPort;
 import co.edu.monteria.medicitas.domain.model.Cita;
+import co.edu.monteria.medicitas.domain.model.enums.EstadoCita;
 import co.edu.monteria.medicitas.infrastructure.adapters.out.persistence.entity.CitaEntity;
 import co.edu.monteria.medicitas.infrastructure.adapters.out.persistence.mapper.DomainEntityMapper;
 import co.edu.monteria.medicitas.infrastructure.adapters.out.persistence.repository.CitaJpaRepository;
@@ -46,6 +47,13 @@ public class CitaPersistenceAdapter implements CitaRepositoryPort {
     @Override
     public List<Cita> buscarPorMedicoId(Long medicoId) {
         return repository.findByDisponibilidadMedicoIdOrderByDisponibilidadFechaAsc(medicoId)
+                .stream().map(mapper::toCitaDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Cita> buscarProgramadasPorBloqueId(Long bloqueId) {
+        return repository.findByDisponibilidadBloqueIdAndEstadoOrderByDisponibilidadHoraInicioAsc(
+                        bloqueId, EstadoCita.PROGRAMADA)
                 .stream().map(mapper::toCitaDomain).collect(Collectors.toList());
     }
 }

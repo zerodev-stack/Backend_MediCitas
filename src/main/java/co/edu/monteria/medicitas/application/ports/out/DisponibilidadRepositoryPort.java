@@ -13,6 +13,14 @@ public interface DisponibilidadRepositoryPort {
     List<DisponibilidadMedico> buscarDisponibles(Long especialidadId, Long ipsId, LocalDate fecha);
     List<DisponibilidadMedico> buscarPorMedicoId(Long medicoId);
 
+    List<DisponibilidadMedico> buscarPorBloqueId(Long bloqueId);
+
+    /** Cupos LIBRES del médico desde la fecha indicada (incluida), en orden cronológico. */
+    List<DisponibilidadMedico> buscarLibresDeMedicoDesde(Long medicoId, LocalDate desde);
+
+    /** Franjas sueltas (sin bloque) no canceladas del médico en una fecha. */
+    List<DisponibilidadMedico> buscarSueltasVigentesDeMedico(Long medicoId, LocalDate fecha);
+
     /**
      * Cambia el estado del cupo sólo si se encuentra en el estado esperado.
      *

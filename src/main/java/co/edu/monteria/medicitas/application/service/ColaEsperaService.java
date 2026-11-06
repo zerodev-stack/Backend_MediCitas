@@ -5,6 +5,8 @@ import co.edu.monteria.medicitas.application.ports.out.ColaEsperaRepositoryPort;
 import co.edu.monteria.medicitas.application.ports.out.EspecialidadRepositoryPort;
 import co.edu.monteria.medicitas.application.ports.out.IpsRepositoryPort;
 import co.edu.monteria.medicitas.application.ports.out.NotificacionPort;
+import co.edu.monteria.medicitas.application.ports.out.SedeRepositoryPort;
+import co.edu.monteria.medicitas.application.ports.out.ServicioRepositoryPort;
 import co.edu.monteria.medicitas.application.ports.out.UsuarioRepositoryPort;
 import co.edu.monteria.medicitas.domain.exception.AccesoNoAutorizadoException;
 import co.edu.monteria.medicitas.domain.exception.RecursoNoEncontradoException;
@@ -12,6 +14,8 @@ import co.edu.monteria.medicitas.domain.exception.ReglaNegocioException;
 import co.edu.monteria.medicitas.domain.model.ColaEspera;
 import co.edu.monteria.medicitas.domain.model.Especialidad;
 import co.edu.monteria.medicitas.domain.model.Ips;
+import co.edu.monteria.medicitas.domain.model.Sede;
+import co.edu.monteria.medicitas.domain.model.Servicio;
 import co.edu.monteria.medicitas.domain.model.Usuario;
 import co.edu.monteria.medicitas.domain.model.enums.EstadoColaEspera;
 import co.edu.monteria.medicitas.domain.model.enums.TipoNotificacion;
@@ -30,21 +34,28 @@ public class ColaEsperaService implements GestionarColaEsperaUseCase {
     private final EspecialidadRepositoryPort especialidadRepository;
     private final IpsRepositoryPort ipsRepository;
     private final NotificacionPort notificacionPort;
+    private final ServicioRepositoryPort servicioRepository;
+    private final SedeRepositoryPort sedeRepository;
 
     public ColaEsperaService(ColaEsperaRepositoryPort colaEsperaRepository,
                              UsuarioRepositoryPort usuarioRepository,
                              EspecialidadRepositoryPort especialidadRepository,
                              IpsRepositoryPort ipsRepository,
-                             NotificacionPort notificacionPort) {
+                             NotificacionPort notificacionPort,
+                             ServicioRepositoryPort servicioRepository,
+                             SedeRepositoryPort sedeRepository) {
         this.colaEsperaRepository = colaEsperaRepository;
         this.usuarioRepository = usuarioRepository;
         this.especialidadRepository = especialidadRepository;
         this.ipsRepository = ipsRepository;
         this.notificacionPort = notificacionPort;
+        this.servicioRepository = servicioRepository;
+        this.sedeRepository = sedeRepository;
     }
 
     @Override
-    public ColaEspera unirseAColaEspera(Long pacienteId, Long especialidadId, Long ipsId) {
+    public ColaEspera unirseAColaEspera(Long pacienteId, Long especialidadId, Long ipsId,
+                                        Long servicioId, Long sedeId) {
         Usuario paciente = usuarioRepository.buscarPorId(pacienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Paciente no encontrado"));
 
@@ -53,6 +64,23 @@ public class ColaEsperaService implements GestionarColaEsperaUseCase {
 
         Ips ips = ipsRepository.buscarPorId(ipsId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("IPS no encontrada"));
+
+        Servicio servicio = null;
+        if (servicioId != null) {
+            servicio = servicioRepository.buscarPorId(servicioId)
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Servicio no encontrado"));
+            if (!servicio.getEspecialidad().getId().equals(especialidadId)) {
+                throw new ReglaNegocioException("El servicio solicitado no pertenece a la especialidad elegida.");
+            }
+        }
+        Sede sede = null;
+        if (sedeId != null) {
+            sede = sedeRepository.buscarPorId(sedeId)
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Sede no encontrada"));
+            if (!sede.getIps().getId().equals(ipsId)) {
+                throw new ReglaNegocioException("La sede solicitada no pertenece a la IPS elegida.");
+            }
+        }
 
         boolean yaEnEspera = colaEsperaRepository.existeEnEspera(
                 pacienteId, especialidadId, ipsId, EstadoColaEspera.EN_ESPERA);
@@ -65,6 +93,8 @@ public class ColaEsperaService implements GestionarColaEsperaUseCase {
         cola.setPaciente(paciente);
         cola.setEspecialidad(especialidad);
         cola.setIps(ips);
+        cola.setServicio(servicio);
+        cola.setSede(sede);
         cola.setFechaSolicitud(LocalDateTime.now());
         cola.setEstado(EstadoColaEspera.EN_ESPERA);
 
